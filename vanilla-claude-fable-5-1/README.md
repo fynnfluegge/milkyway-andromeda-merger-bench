@@ -93,9 +93,3 @@ Source: recorded usage for the `vanilla fable-5-1` run.
 | `claude-haiku-4-5` | 1.8k | 35 | 0 | 0 | $0.0020 |
 | `claude-fable-5-1` | 356 | 51.0k | 941.4k | 88.8k | $4.48 |
 
-`k` means 1,000 tokens. The abbreviated counts and model costs are rounded, so
-their displayed sum need not equal the separately reported total exactly. The
-source provides no per-token rates or invoice verification. These figures
-describe the recorded generation session; the line-change count is not a count
-of the files currently in this folder. Local simulation playback uses no model
-API and adds no model-token cost.

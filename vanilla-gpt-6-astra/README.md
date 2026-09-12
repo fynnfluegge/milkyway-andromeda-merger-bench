@@ -101,8 +101,3 @@ API-equivalent generation cost: **$5.04 USD**.
 | Output | 44,082 |
 | **Total, calculated from the three categories** | **1,914,970** |
 
-The source describes the estimate as using standard GPT-6 Astra rates, but does
-not list the rates themselves. It supplies no cache-write count, API/wall
-duration, or code-change statistics. This is a recorded API-equivalent estimate,
-not a verified charge or a fresh pricing calculation. Local visualization
-playback uses no model API and adds no model-token cost.

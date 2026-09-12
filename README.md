@@ -46,10 +46,7 @@ python3 -m http.server 8000 --bind 127.0.0.1
 ```
 
 Python 3 supplies the server; these two projects need no npm installation or
-build step to run. Fable needs WebGL and Opus needs WebGL 2. Both pages request
-Google Fonts and use fallback fonts if those requests are unavailable. Stop the
-server with `Ctrl+C`.
-
+build step to run. Fable needs WebGL and Opus needs WebGL 2.
 ### GPT-6 Astra
 
 Astra uses React and TypeScript, so Vinext compiles and serves the application
@@ -63,33 +60,4 @@ npm run dev
 ```
 
 Open [http://localhost:3000](http://localhost:3000), or the URL printed by the
-server if that port is in use. No hosting account, cloud bindings, or hosting
-configuration is required. Stop the server with `Ctrl+C`. See the
-[Astra README](vanilla-gpt-6-astra/README.md) for production build and local
-preview commands.
-
-## Checks and development
-
-The [Opus README](vanilla-claude-opus-5/README.md) documents the orbit parameter
-sweep, and the
-[Fable README](vanilla-claude-fable-5-1/README.md) includes a headless orbit command.
-The [Astra README](vanilla-gpt-6-astra/README.md) documents its build and lint
-commands.
-There is no root-level npm project or combined test command.
-
-## Usage and cost records
-
-Generation usage and cost tables are transcribed from the recorded run reports.
-Each benchmark README reproduces its model breakdown and available duration and
-code-change statistics. These are the costs of generating the projects; running
-their browser simulations does not call a model API.
-
-Amounts are preserved from the recorded reports, not repriced against current
-model rates or verified as actual charges. Astra's cost is an API-equivalent
-estimate. In the Claude tables, `k` means 1,000 tokens and `m`
-means 1,000,000; rounded token counts and costs should not be treated as exact
-invoices or directly comparable measurements of identical work.
-
-The root [.gitignore](.gitignore) covers nested dependencies, generated builds,
-tool caches, local environment files, logs, and editor/OS files. Lockfiles and
-benchmark records remain eligible for version control.
+server if that port is in use.

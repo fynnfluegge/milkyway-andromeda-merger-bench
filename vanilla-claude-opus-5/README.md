@@ -95,9 +95,3 @@ Source: recorded usage for the `vanilla opus-5` run.
 | `claude-haiku-4-5` | 1.8k | 38 | 0 | 0 | $0.0020 |
 | `claude-opus-5` | 1.6k | 92.4k | 2.7m | 324.9k | $6.93 |
 
-`k` means 1,000 tokens and `m` means 1,000,000. The abbreviated counts and model
-costs are rounded, so their displayed sum need not equal the reported total
-exactly. The source does not provide per-token rates or invoice verification.
-The code-change statistics describe the generation session rather than the
-current source line count. Browser playback and the local orbit sweep use no
-model API and add no model-token cost.
