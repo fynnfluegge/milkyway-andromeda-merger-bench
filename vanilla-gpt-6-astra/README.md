@@ -92,7 +92,7 @@ evaluation at the selected time allows seeking without replaying physics steps.
 
 Source: recorded usage for the `vanilla gpt-6-astra` run.
 
-Estimated API-equivalent generation cost: **$5.04 USD**.
+API-equivalent generation cost: **$5.04 USD**.
 
 | Token category | Tokens |
 | --- | ---: |

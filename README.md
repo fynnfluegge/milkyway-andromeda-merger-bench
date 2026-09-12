@@ -15,7 +15,7 @@ generation prompt, automated cross-project benchmark runner, or scoring rubric.
 | --- | --- | --- | --- |
 | [Vanilla Claude Fable 5.1](vanilla-claude-fable-5-1/README.md) | Restricted N-body simulation; WebGL; 40,000–60,000 test stars; 0–9 Gyr timeline | Static HTTP server | $4.48 |
 | [Vanilla Claude Opus 5](vanilla-claude-opus-5/README.md) | Restricted N-body encounter with a rigid-disc approach phase; WebGL 2; 56,000–110,000 test stars; 0–8 Gyr timeline | Static HTTP server | $6.93 |
-| [Vanilla GPT-6 Astra](vanilla-gpt-6-astra/README.md) | Artistic galaxy animation with scripted paths; React, TypeScript, WebGL, and Vinext; 0–8 Gyr timeline | Local Node.js server and npm | $5.04 estimated |
+| [Vanilla GPT-6 Astra](vanilla-gpt-6-astra/README.md) | Artistic galaxy animation with scripted paths; React, TypeScript, WebGL, and Vinext; 0–8 Gyr timeline | Local Node.js server and npm | $5.04 |
 
 Gyr means billion years. The two restricted N-body models move massless test
 stars through analytic galaxy potentials. The Astra implementation uses
