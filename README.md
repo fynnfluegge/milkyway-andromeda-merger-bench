@@ -22,35 +22,9 @@ stars through analytic galaxy potentials. The Astra implementation uses
 choreographed motion and illustrative distances. These implementation differences
 matter when comparing the resulting visuals and behavior.
 
-## Screenshots
-
-Save images in `screenshots/`. Each subsection contains a commented-out Markdown
-image example; remove its comment markers when the image is added. Adjust the
-filename as needed, or duplicate the image line to include multiple views.
-
-### Vanilla Claude Fable 5.1
-
-_Screenshot to be added._
-
-<!--
-![Claude Fable 5.1 — Milky Way–Andromeda simulation](screenshots/vanilla-claude-fable-5-1.png)
--->
-
-### Vanilla Claude Opus 5
-
-_Screenshot to be added._
-
-<!--
-![Claude Opus 5 — Milky Way–Andromeda simulation](screenshots/vanilla-claude-opus-5.png)
--->
-
-### Vanilla GPT-6 Astra
-
-_Screenshot to be added._
-
-<!--
-![GPT-6 Astra — Milky Way–Andromeda visualization](screenshots/vanilla-gpt-6-astra.png)
--->
+| Opus 5 | Fable 5.1 | GPT-6 Astra |
+| --- | --- | --- |
+| <img width="1024" alt="Screenshot 2026-09-12 at 10 48 18" src="https://github.com/user-attachments/assets/2a1895d6-8754-462c-b0cb-dc22318cd379" /> | <img width="1024" alt="Screenshot 2026-09-12 at 10 46 30" src="https://github.com/user-attachments/assets/90c610d0-f8c2-4f6f-b748-0c42d77f428b" /> | <img width="1024" alt="Screenshot 2026-09-12 at 10 43 24" src="https://github.com/user-attachments/assets/32bb163f-c680-4a83-bf21-9efa52dee654" /> |
 
 ## Run locally
 
