@@ -22,6 +22,36 @@ stars through analytic galaxy potentials. The Astra implementation uses
 choreographed motion and illustrative distances. These implementation differences
 matter when comparing the resulting visuals and behavior.
 
+## Screenshots
+
+Save images in `screenshots/`. Each subsection contains a commented-out Markdown
+image example; remove its comment markers when the image is added. Adjust the
+filename as needed, or duplicate the image line to include multiple views.
+
+### Vanilla Claude Fable 5.1
+
+_Screenshot to be added._
+
+<!--
+![Claude Fable 5.1 — Milky Way–Andromeda simulation](screenshots/vanilla-claude-fable-5-1.png)
+-->
+
+### Vanilla Claude Opus 5
+
+_Screenshot to be added._
+
+<!--
+![Claude Opus 5 — Milky Way–Andromeda simulation](screenshots/vanilla-claude-opus-5.png)
+-->
+
+### Vanilla GPT-6 Astra
+
+_Screenshot to be added._
+
+<!--
+![GPT-6 Astra — Milky Way–Andromeda visualization](screenshots/vanilla-gpt-6-astra.png)
+-->
+
 ## Run locally
 
 All three benchmarks run locally. Start the static server and Astra's Node.js
