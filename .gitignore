@@ -1,0 +1,51 @@
+# Operating-system and editor files
+.DS_Store
+._*
+Thumbs.db
+Desktop.ini
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# JavaScript dependencies and package-manager caches
+node_modules/
+.npm/
+.pnpm-store/
+
+# Vite / Vinext / Next.js build output and caches
+dist/
+build/
+out/
+.next/
+.vite/
+.vinext/
+.cache/
+*.tsbuildinfo
+
+# Local environment and secrets; keep shareable examples
+.env
+.env.*
+!.env.example
+!.env.*.example
+!.env.sample
+!.env.template
+
+# Logs and test output
+*.log
+coverage/
+.nyc_output/
+playwright-report/
+test-results/
+
+# Local agent state and worktrees
+.agtx/
+.claude/worktrees/
+.claude/settings.local.json
+
+# Local generation records
+/tokens.txt
+
+# Keep source, lockfiles, and benchmark READMEs available as reproducible
+# inputs and usage summaries.

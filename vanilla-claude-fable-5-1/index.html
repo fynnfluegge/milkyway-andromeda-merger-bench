@@ -1,0 +1,564 @@
+<title>Milkomeda</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,200..600&family=Geist+Mono:wght@400;500&family=Geist:wght@400;500&display=swap">
+<style>
+  :root {
+    color-scheme: dark;
+    --ground: #05070d;
+    --panel: rgba(13, 18, 28, 0.78);
+    --line: rgba(160, 176, 205, 0.16);
+    --text: #dfe3ec;
+    --muted: #7d8598;
+    --mw: #f3c98b;
+    --m31: #9cc0ff;
+    --focus: #f3c98b;
+    --display: "Bricolage Grotesque", "Helvetica Neue", Arial, sans-serif;
+    --mono: "Geist Mono", ui-monospace, "SF Mono", Menlo, monospace;
+    --body: "Geist", system-ui, -apple-system, "Segoe UI", sans-serif;
+  }
+  * { box-sizing: border-box; }
+  html, body { height: 100%; }
+  body {
+    margin: 0;
+    background: var(--ground);
+    color: var(--text);
+    font-family: var(--body);
+    font-size: 14px;
+    line-height: 1.45;
+    overflow: hidden;
+    -webkit-font-smoothing: antialiased;
+  }
+  .stage { position: fixed; inset: 0; }
+  canvas#gl { position: absolute; inset: 0; width: 100%; height: 100%; display: block; cursor: grab; touch-action: none; }
+  canvas#gl.dragging { cursor: grabbing; }
+
+  .hud { position: absolute; left: 0; right: 0; padding-inline: clamp(16px, 3vw, 32px); pointer-events: none; }
+  .hud > * { pointer-events: auto; }
+  .hud-top { top: 0; padding-block: 18px 0; display: flex; justify-content: space-between; align-items: flex-start; gap: 24px; flex-wrap: wrap; }
+  .brand h1 {
+    font-family: var(--display); font-weight: 200; font-optical-sizing: auto;
+    font-size: clamp(30px, 4.6vw, 46px); line-height: 1; letter-spacing: -0.02em; margin: 0;
+    text-wrap: balance;
+  }
+  .brand p { margin: 6px 0 0; color: var(--muted); font-size: 13px; max-width: 34ch; }
+  .readout { display: flex; gap: clamp(16px, 3vw, 36px); font-family: var(--mono); font-variant-numeric: tabular-nums; flex-wrap: wrap; }
+  .ro { display: flex; flex-direction: column; gap: 3px; min-width: 9ch; }
+  .lbl { color: var(--muted); font-size: 10.5px; letter-spacing: 0.12em; text-transform: uppercase; }
+  .val { font-size: 17px; font-weight: 500; white-space: nowrap; }
+  .alt { color: var(--muted); font-size: 11.5px; white-space: nowrap; }
+
+  .legend { position: absolute; left: clamp(16px, 3vw, 32px); bottom: 118px; display: flex; flex-direction: column; gap: 8px; font-family: var(--mono); font-size: 11.5px; color: var(--muted); pointer-events: none; }
+  .legend .sw { display: inline-block; width: 9px; height: 9px; border-radius: 50%; margin-right: 8px; vertical-align: -1px; box-shadow: 0 0 10px currentColor; }
+  .legend .mw { color: var(--mw); } .legend .m31 { color: var(--m31); }
+  .legend .name { color: var(--text); }
+  .legend .hint { margin-top: 4px; }
+
+  .hud-bottom {
+    bottom: 0; padding-block: 0 18px;
+    display: grid; grid-template-columns: auto 1fr auto; align-items: end; gap: 14px 20px;
+  }
+  .transport { display: flex; gap: 8px; }
+  button, .seg label {
+    font: inherit; color: var(--text); background: var(--panel); border: 1px solid var(--line);
+    border-radius: 6px; padding: 8px 12px; cursor: pointer; backdrop-filter: blur(10px);
+    font-family: var(--mono); font-size: 12px; letter-spacing: 0.02em; line-height: 1; display: inline-flex; align-items: center; gap: 8px;
+  }
+  button:hover, .seg label:hover { border-color: rgba(160,176,205,0.36); }
+  button:focus-visible, .seg input:focus-visible + label, .track:focus-visible, .marker:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+  button svg { width: 11px; height: 11px; fill: currentColor; }
+  #play { min-width: 92px; }
+  .seg { display: inline-flex; background: var(--panel); border: 1px solid var(--line); border-radius: 6px; backdrop-filter: blur(10px); }
+  .seg input { position: absolute; opacity: 0; width: 0; height: 0; }
+  .seg label { background: transparent; border: 0; border-radius: 5px; padding: 8px 10px; }
+  .seg input:checked + label { background: rgba(223,227,236,0.14); color: #fff; }
+  .right { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; justify-content: flex-end; }
+  #autoframe[aria-pressed="true"] { border-color: rgba(243,201,139,0.55); color: var(--mw); }
+
+  .timeline { position: relative; padding-top: 30px; }
+  .track { position: relative; height: 22px; cursor: pointer; }
+  .track::before { content: ""; position: absolute; left: 0; right: 0; top: 10px; height: 2px; background: rgba(160,176,205,0.22); border-radius: 1px; }
+  .fill { position: absolute; left: 0; top: 10px; height: 2px; width: 0; background: linear-gradient(90deg, var(--mw), var(--m31)); border-radius: 1px; }
+  .head { position: absolute; top: 5px; width: 12px; height: 12px; margin-left: -6px; border-radius: 50%; background: #fff; box-shadow: 0 0 12px rgba(255,255,255,0.7); }
+  .marker { position: absolute; top: -30px; transform: translateX(-50%); background: none; border: 0; padding: 0 0 20px; color: var(--muted); font-family: var(--mono); font-size: 10.5px; letter-spacing: 0.06em; text-transform: uppercase; white-space: nowrap; backdrop-filter: none; display: flex; flex-direction: column; align-items: center; gap: 6px; }
+  .marker::after { content: ""; width: 1px; height: 10px; background: rgba(160,176,205,0.5); }
+  .marker:hover, .marker.active { color: var(--text); }
+  .marker.today { transform: translateX(0); align-items: flex-start; }
+  .marker.today::after { margin-left: 0; }
+  .marker.end { transform: translateX(-100%); align-items: flex-end; }
+  .ticks { position: absolute; left: 0; right: 0; top: 14px; height: 8px; pointer-events: none; }
+  .ticks i { position: absolute; top: 0; width: 1px; height: 5px; background: rgba(160,176,205,0.25); }
+
+  .hud-top .readout { margin-left: auto; }
+  .about { position: relative; z-index: 3; }
+  .about summary { list-style: none; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; font-family: var(--mono); font-size: 12px; color: var(--text); background: var(--panel); border: 1px solid var(--line); border-radius: 6px; padding: 8px 12px; backdrop-filter: blur(10px); white-space: nowrap; }
+  .about summary::-webkit-details-marker { display: none; }
+  .about summary:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+  .about[open] summary { border-bottom-left-radius: 0; border-bottom-right-radius: 0; }
+  .about .body { position: absolute; right: 0; top: calc(100% + 8px); width: min(400px, calc(100vw - 32px)); background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 16px 18px; backdrop-filter: blur(14px); max-height: calc(100vh - 220px); overflow-y: auto; }
+  .about h2 { font-family: var(--display); font-weight: 400; font-size: 18px; margin: 0 0 8px; letter-spacing: -0.01em; }
+  .about p { margin: 0 0 10px; color: var(--text); max-width: 60ch; }
+  .about p:last-child { margin-bottom: 0; }
+  .about dl { display: grid; grid-template-columns: max-content 1fr; gap: 4px 14px; margin: 12px 0; font-family: var(--mono); font-size: 12px; font-variant-numeric: tabular-nums; }
+  .about dt { color: var(--muted); }
+  .about dd { margin: 0; }
+  .about .k { color: var(--muted); font-size: 12px; }
+  .about a { color: var(--m31); }
+
+  .toast { position: absolute; left: 50%; bottom: 128px; transform: translateX(-50%); font-family: var(--mono); font-size: 12px; color: var(--muted); background: var(--panel); border: 1px solid var(--line); border-radius: 6px; padding: 6px 12px; pointer-events: none; opacity: 0; transition: opacity 0.2s; }
+  .toast.show { opacity: 1; }
+
+  @media (max-width: 760px) {
+    .hud-top { padding-block: 14px 0; gap: 12px; }
+    .brand p { display: none; }
+    .readout { gap: 16px; }
+    .val { font-size: 15px; }
+    .legend { bottom: 176px; }
+    .hud-bottom { grid-template-columns: 1fr auto; }
+    .timeline { grid-column: 1 / -1; grid-row: 1; }
+    .transport { grid-row: 2; }
+    .right { grid-row: 2; }
+    .toast { bottom: 190px; }
+    .about { order: 3; }
+    .about .body { max-height: 50vh; left: 0; right: auto; }
+  }
+  @media (max-width: 480px) {
+    .ro:nth-child(2) .alt { display: none; }
+    .marker span { font-size: 9.5px; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .toast { transition: none; }
+  }
+</style>
+
+<div class="stage">
+  <canvas id="gl" aria-label="Simulation of the Milky Way and Andromeda galaxies colliding. Drag to rotate, scroll to zoom."></canvas>
+
+  <header class="hud hud-top">
+    <div class="brand">
+      <h1>Milkomeda</h1>
+      <p>The Milky Way and Andromeda, from today to their merger, in a restricted N-body model.</p>
+    </div>
+    <div class="readout" aria-live="off">
+      <div class="ro"><span class="lbl">Time</span><span class="val" id="tval">T + 0.00 Gyr</span><span class="alt">from today</span></div>
+      <div class="ro"><span class="lbl">Separation</span><span class="val" id="sval">780 kpc</span><span class="alt" id="sly">2.54 million ly</span></div>
+      <div class="ro"><span class="lbl">Phase</span><span class="val" id="phase">Approach</span><span class="alt" id="phasealt">closing at 110 km/s</span></div>
+    </div>
+  <details class="about" id="about">
+    <summary>About the model</summary>
+    <div class="body">
+      <h2>What you are looking at</h2>
+      <p>Each galaxy is a Hernquist sphere of dark matter and stars. The two centres orbit each other as a two-body problem with Chandrasekhar dynamical friction, which is what eventually drags them together. The stars are massless test particles that respond to both galaxies but not to each other, the classic Toomre &amp; Toomre approach. It captures tidal tails, bridges and the final coalescence, but not gas, star formation or the fine structure a full self-gravitating simulation would show.</p>
+      <dl>
+        <dt>Milky Way</dt><dd>1.3 × 10¹² M☉ · disk scale 2.6 kpc</dd>
+        <dt>Andromeda</dt><dd>2.0 × 10¹² M☉ · disk scale 5.0 kpc</dd>
+        <dt>Today</dt><dd>780 kpc apart · closing at 110 km/s</dd>
+        <dt>Transverse</dt><dd>45 km/s</dd>
+        <dt>First pass</dt><dd id="d-peri">—</dd>
+        <dt>Merger</dt><dd id="d-merge">—</dd>
+        <dt>Particles</dt><dd id="d-n">—</dd>
+      </dl>
+      <p class="k">Timings follow the classic prediction (first close pass in about 4 billion years, merger about 2 billion years later). Newer work that folds in the Large Magellanic Cloud and the uncertainty in Andromeda's sideways motion puts the odds of a merger within 10 billion years near a coin flip, so treat this as one plausible future rather than a forecast. The merged remnant, an elliptical galaxy, is what astronomers have nicknamed Milkomeda.</p>
+      <p class="k">1 kpc is 3,262 light-years. Drag to rotate the view, scroll or pinch to zoom, press space to pause.</p>
+    </div>
+  </details>
+  </header>
+
+
+  <aside class="legend" aria-hidden="true">
+    <div class="mw"><span class="sw" style="background: currentColor"></span><span class="name">Milky Way</span></div>
+    <div class="m31"><span class="sw" style="background: currentColor"></span><span class="name">Andromeda</span></div>
+    <div class="hint" id="hint">drag to rotate · scroll to zoom</div>
+  </aside>
+
+  <div class="toast" id="toast">Skipping ahead…</div>
+
+  <footer class="hud hud-bottom">
+    <div class="transport">
+      <button id="play" type="button" aria-label="Pause">
+        <svg id="ico-pause" viewBox="0 0 10 10"><rect x="1" y="1" width="3" height="8"/><rect x="6" y="1" width="3" height="8"/></svg>
+        <svg id="ico-play" viewBox="0 0 10 10" hidden><path d="M2 1 L9 5 L2 9 Z"/></svg>
+        <span id="playlabel">Pause</span>
+      </button>
+      <button id="restart" type="button" aria-label="Restart from today">
+        <svg viewBox="0 0 10 10"><path d="M5 1.5 A3.5 3.5 0 1 1 1.6 4.2" fill="none" stroke="currentColor" stroke-width="1.4"/><path d="M1 1.5 L1.8 4.6 L4.8 3.8 Z"/></svg>
+        Restart
+      </button>
+    </div>
+    <div class="timeline">
+      <div class="track" id="track" role="slider" aria-label="Simulation time" aria-valuemin="0" aria-valuemax="9" aria-valuenow="0" tabindex="0">
+        <div class="ticks" id="ticks"></div>
+        <div class="fill" id="fill"></div>
+        <div class="head" id="head"></div>
+        <div id="markers"></div>
+      </div>
+    </div>
+    <div class="right">
+      <div class="seg" role="radiogroup" aria-label="Playback speed">
+        <input type="radio" name="speed" id="sp05" value="0.5"><label for="sp05">½×</label>
+        <input type="radio" name="speed" id="sp1" value="1" checked><label for="sp1">1×</label>
+        <input type="radio" name="speed" id="sp2" value="2"><label for="sp2">2×</label>
+        <input type="radio" name="speed" id="sp4" value="4"><label for="sp4">4×</label>
+      </div>
+      <button id="autoframe" type="button" aria-pressed="true">Auto frame</button>
+    </div>
+  </footer>
+</div>
+
+<script src="sim.js"></script>
+<script>
+(function () {
+  'use strict';
+  const S = window.GalaxySim;
+  const P = S.PARAMS;
+  const T_END = 9.0;            // Gyr shown on the timeline
+  const DT = 0.0025;            // integration step, Gyr
+  const BASE_RATE = 0.11;       // Gyr of simulation per real second at 1x, during the interaction
+  const N = (navigator.hardwareConcurrency || 4) >= 8 ? 60000 : 40000;
+
+  // ---------- precomputed orbit -> timeline markers ----------
+  const orbit = S.precomputeOrbit(P, T_END, 0.001);
+  const tPeri = orbit.peri.length ? orbit.peri[0].t : null;
+  const tMerge = orbit.merge;
+
+  // ---------- simulation ----------
+  let sim = S.createSim(P, N, 7);
+  let playing = !window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  let speedMult = 1;
+  let jumpTarget = null;
+  let finished = false;
+
+  // nucleus trails
+  const TRAIL_MAX = 4000;
+  const trail1 = new Float32Array(3 * TRAIL_MAX), trail2 = new Float32Array(3 * TRAIL_MAX);
+  let trailN = 0, trailLastT = -1;
+  function pushTrail() {
+    if (sim.t - trailLastT < 0.01 || trailN >= TRAIL_MAX) return;
+    trail1.set(sim.c1, 3 * trailN); trail2.set(sim.c2, 3 * trailN); trailN++; trailLastT = sim.t;
+  }
+  function resetSim() {
+    sim = S.createSim(P, N, 7);
+    trailN = 0; trailLastT = -1; pushTrail();
+    finished = false;
+    gl.bindBuffer(gl.ARRAY_BUFFER, bufCol); gl.bufferData(gl.ARRAY_BUFFER, sim.col, gl.STATIC_DRAW);
+    gl.bindBuffer(gl.ARRAY_BUFFER, bufSize); gl.bufferData(gl.ARRAY_BUFFER, sim.size, gl.STATIC_DRAW);
+  }
+
+  // ---------- WebGL ----------
+  const canvas = document.getElementById('gl');
+  const gl = canvas.getContext('webgl', { alpha: false, antialias: false, premultipliedAlpha: false, depth: false, powerPreference: 'high-performance' });
+  if (!gl) {
+    document.getElementById('hint').textContent = 'WebGL is not available in this browser.';
+    return;
+  }
+  function compile(type, src) {
+    const sh = gl.createShader(type); gl.shaderSource(sh, src); gl.compileShader(sh);
+    if (!gl.getShaderParameter(sh, gl.COMPILE_STATUS)) throw new Error(gl.getShaderInfoLog(sh));
+    return sh;
+  }
+  function program(vs, fs) {
+    const p = gl.createProgram();
+    gl.attachShader(p, compile(gl.VERTEX_SHADER, vs)); gl.attachShader(p, compile(gl.FRAGMENT_SHADER, fs));
+    gl.linkProgram(p);
+    if (!gl.getProgramParameter(p, gl.LINK_STATUS)) throw new Error(gl.getProgramInfoLog(p));
+    return p;
+  }
+  const VS_PT = `
+    attribute vec3 a_pos; attribute vec3 a_col; attribute float a_size;
+    uniform mat3 u_rot; uniform vec3 u_center; uniform float u_scale; uniform float u_aspect; uniform float u_ps; uniform float u_int;
+    varying vec3 v_col;
+    void main() {
+      vec3 p = u_rot * (a_pos - u_center);
+      gl_Position = vec4(p.x * u_scale / u_aspect, p.y * u_scale, 0.0, 1.0);
+      gl_PointSize = a_size * u_ps;
+      v_col = a_col * u_int;
+    }`;
+  const FS_PT = `
+    precision mediump float; varying vec3 v_col; uniform float u_soft;
+    void main() {
+      vec2 d = gl_PointCoord - 0.5; float r2 = dot(d, d) * 4.0;
+      if (r2 > 1.0) discard;
+      float a = pow(1.0 - r2, u_soft);
+      gl_FragColor = vec4(v_col * a, 1.0);
+    }`;
+  const VS_LN = `
+    attribute vec3 a_pos;
+    uniform mat3 u_rot; uniform vec3 u_center; uniform float u_scale; uniform float u_aspect;
+    void main() { vec3 p = u_rot * (a_pos - u_center); gl_Position = vec4(p.x * u_scale / u_aspect, p.y * u_scale, 0.0, 1.0); }`;
+  const FS_LN = `precision mediump float; uniform vec3 u_col; void main() { gl_FragColor = vec4(u_col, 1.0); }`;
+  const VS_BG = `
+    attribute vec2 a_p; attribute float a_b; uniform vec2 u_shift; uniform float u_dpr; varying float v_b;
+    void main() { vec2 q = a_p + u_shift; q = mod(q + 1.0, 2.0) - 1.0; gl_Position = vec4(q, 0.0, 1.0); gl_PointSize = (1.0 + a_b) * u_dpr; v_b = a_b; }`;
+  const FS_BG = `
+    precision mediump float; varying float v_b;
+    void main() { vec2 d = gl_PointCoord - 0.5; float r2 = dot(d, d) * 4.0; if (r2 > 1.0) discard; float a = (1.0 - r2) * (0.12 + 0.5 * v_b); gl_FragColor = vec4(vec3(0.78, 0.84, 0.95) * a, 1.0); }`;
+
+  const progPt = program(VS_PT, FS_PT), progLn = program(VS_LN, FS_LN), progBg = program(VS_BG, FS_BG);
+  const U = (p, n) => gl.getUniformLocation(p, n);
+  const A = (p, n) => gl.getAttribLocation(p, n);
+
+  const bufPos = gl.createBuffer(), bufCol = gl.createBuffer(), bufSize = gl.createBuffer();
+  gl.bindBuffer(gl.ARRAY_BUFFER, bufPos); gl.bufferData(gl.ARRAY_BUFFER, sim.pos, gl.DYNAMIC_DRAW);
+  gl.bindBuffer(gl.ARRAY_BUFFER, bufCol); gl.bufferData(gl.ARRAY_BUFFER, sim.col, gl.STATIC_DRAW);
+  gl.bindBuffer(gl.ARRAY_BUFFER, bufSize); gl.bufferData(gl.ARRAY_BUFFER, sim.size, gl.STATIC_DRAW);
+
+  // nucleus glows
+  const glowPos = new Float32Array(6);
+  const glowCol = new Float32Array([0.95, 0.78, 0.50, 0.55, 0.68, 1.0]);
+  const glowSize = new Float32Array([1, 1]);
+  const bufGlowPos = gl.createBuffer(), bufGlowCol = gl.createBuffer(), bufGlowSize = gl.createBuffer();
+  gl.bindBuffer(gl.ARRAY_BUFFER, bufGlowCol); gl.bufferData(gl.ARRAY_BUFFER, glowCol, gl.STATIC_DRAW);
+  gl.bindBuffer(gl.ARRAY_BUFFER, bufGlowSize); gl.bufferData(gl.ARRAY_BUFFER, glowSize, gl.STATIC_DRAW);
+  gl.bindBuffer(gl.ARRAY_BUFFER, bufGlowPos); gl.bufferData(gl.ARRAY_BUFFER, glowPos, gl.DYNAMIC_DRAW);
+
+  const bufTrail1 = gl.createBuffer(), bufTrail2 = gl.createBuffer();
+
+  // background stars
+  const NBG = 1100;
+  const bg = new Float32Array(3 * NBG);
+  (function () {
+    let s = 1234567;
+    const r = () => { s = (s * 1664525 + 1013904223) >>> 0; return s / 4294967296; };
+    for (let i = 0; i < NBG; i++) { bg[3 * i] = r() * 2 - 1; bg[3 * i + 1] = r() * 2 - 1; bg[3 * i + 2] = Math.pow(r(), 3); }
+  })();
+  const bufBg = gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER, bufBg); gl.bufferData(gl.ARRAY_BUFFER, bg, gl.STATIC_DRAW);
+
+  gl.enable(gl.BLEND); gl.blendFunc(gl.ONE, gl.ONE);
+  gl.clearColor(0.02, 0.027, 0.05, 1);
+
+  // ---------- camera ----------
+  const cam = { yaw: 0.45, pitch: 0.62, halfW: 520, target: 520, center: [0, 0, 0], auto: true };
+  let dpr = Math.min(window.devicePixelRatio || 1, 2);
+  function resize() {
+    dpr = Math.min(window.devicePixelRatio || 1, 2);
+    const w = Math.max(1, Math.round(canvas.clientWidth * dpr)), h = Math.max(1, Math.round(canvas.clientHeight * dpr));
+    if (canvas.width !== w || canvas.height !== h) { canvas.width = w; canvas.height = h; }
+    gl.viewport(0, 0, w, h);
+  }
+  window.addEventListener('resize', resize); resize();
+
+  function rotMatrix() {
+    const cy = Math.cos(cam.yaw), sy = Math.sin(cam.yaw), cp = Math.cos(cam.pitch), sp = Math.sin(cam.pitch);
+    // column-major mat3 for GLSL: rotate about z by yaw, then tilt about x by pitch
+    return new Float32Array([
+      cy, -sy * cp, sy * sp,
+      sy, cy * cp, -cy * sp,
+      0, sp, cp,
+    ]);
+  }
+  function frameTarget() {
+    const sep = sim.separation();
+    return Math.max(0.60 * sep + 30, 48);
+  }
+
+  // drag / wheel / touch
+  let drag = null, pinch = null;
+  canvas.addEventListener('pointerdown', (e) => {
+    canvas.setPointerCapture(e.pointerId);
+    if (drag && e.pointerId !== drag.id) { pinch = { id: e.pointerId, x: e.clientX, y: e.clientY }; return; }
+    drag = { id: e.pointerId, x: e.clientX, y: e.clientY }; canvas.classList.add('dragging');
+  });
+  canvas.addEventListener('pointermove', (e) => {
+    if (pinch && (e.pointerId === pinch.id || e.pointerId === drag.id)) {
+      const a = e.pointerId === drag.id ? { x: e.clientX, y: e.clientY } : drag, b = e.pointerId === pinch.id ? { x: e.clientX, y: e.clientY } : pinch;
+      const d0 = Math.hypot(drag.x - pinch.x, drag.y - pinch.y), d1 = Math.hypot(a.x - b.x, a.y - b.y);
+      if (d0 > 0) zoomBy(d0 / d1);
+      if (e.pointerId === drag.id) { drag.x = e.clientX; drag.y = e.clientY; } else { pinch.x = e.clientX; pinch.y = e.clientY; }
+      return;
+    }
+    if (!drag || e.pointerId !== drag.id) return;
+    cam.yaw += (e.clientX - drag.x) * 0.006;
+    cam.pitch = Math.max(-1.55, Math.min(1.55, cam.pitch + (e.clientY - drag.y) * 0.006));
+    drag.x = e.clientX; drag.y = e.clientY;
+  });
+  const endDrag = (e) => { if (pinch && e.pointerId === pinch.id) pinch = null; if (drag && e.pointerId === drag.id) { drag = null; pinch = null; canvas.classList.remove('dragging'); } };
+  canvas.addEventListener('pointerup', endDrag); canvas.addEventListener('pointercancel', endDrag);
+  function zoomBy(f) {
+    cam.auto = false; autoBtn.setAttribute('aria-pressed', 'false');
+    cam.target = Math.max(10, Math.min(1400, cam.target * f));
+  }
+  canvas.addEventListener('wheel', (e) => { e.preventDefault(); zoomBy(Math.exp(e.deltaY * 0.0015)); }, { passive: false });
+
+  // ---------- UI ----------
+  const tval = document.getElementById('tval'), sval = document.getElementById('sval'), sly = document.getElementById('sly');
+  const phaseEl = document.getElementById('phase'), phaseAlt = document.getElementById('phasealt');
+  const playBtn = document.getElementById('play'), playLabel = document.getElementById('playlabel');
+  const icoPlay = document.getElementById('ico-play'), icoPause = document.getElementById('ico-pause');
+  const autoBtn = document.getElementById('autoframe');
+  const track = document.getElementById('track'), fill = document.getElementById('fill'), head = document.getElementById('head');
+  const markersEl = document.getElementById('markers'), ticksEl = document.getElementById('ticks');
+  const toast = document.getElementById('toast');
+
+  document.getElementById('d-peri').textContent = tPeri !== null ? `T + ${tPeri.toFixed(2)} Gyr · ${orbit.peri[0].sep.toFixed(0)} kpc` : 'none within 9 Gyr';
+  document.getElementById('d-merge').textContent = tMerge !== null ? `T + ${tMerge.toFixed(2)} Gyr` : 'none within 9 Gyr';
+  document.getElementById('d-n').textContent = `${N.toLocaleString()} test particles`;
+
+  for (let g = 1; g < T_END; g++) { const i = document.createElement('i'); i.style.left = (100 * g / T_END) + '%'; ticksEl.appendChild(i); }
+  const events = [{ t: 0, label: 'Today', cls: 'today' }];
+  if (tPeri !== null) events.push({ t: tPeri, label: 'First pass', cls: '' });
+  if (tMerge !== null) events.push({ t: tMerge, label: 'Merger', cls: '' });
+  events.push({ t: T_END, label: `+${T_END} Gyr`, cls: 'end' });
+  for (const ev of events) {
+    const b = document.createElement('button'); b.type = 'button'; b.className = 'marker ' + ev.cls;
+    b.style.left = (100 * ev.t / T_END) + '%';
+    b.innerHTML = `<span>${ev.label}</span>`;
+    b.setAttribute('aria-label', `Jump to ${ev.label}, ${ev.t.toFixed(2)} billion years from today`);
+    b.addEventListener('click', (e) => { e.stopPropagation(); jumpTo(ev.t); });
+    ev.el = b; markersEl.appendChild(b);
+  }
+  track.addEventListener('click', (e) => {
+    const r = track.getBoundingClientRect();
+    jumpTo(Math.max(0, Math.min(T_END, T_END * (e.clientX - r.left) / r.width)));
+  });
+  track.addEventListener('keydown', (e) => {
+    if (e.key === 'ArrowRight') { jumpTo(Math.min(T_END, sim.t + 0.5)); e.preventDefault(); }
+    if (e.key === 'ArrowLeft') { jumpTo(Math.max(0, sim.t - 0.5)); e.preventDefault(); }
+  });
+
+  function jumpTo(t) {
+    if (t < sim.t - 1e-6) resetSim();
+    jumpTarget = t;
+    if (t < T_END - 1e-6) finished = false;
+    toast.classList.add('show');
+  }
+  function setPlaying(on) {
+    playing = on;
+    icoPlay.hidden = on; icoPause.hidden = !on;
+    playLabel.textContent = on ? 'Pause' : (finished ? 'Replay' : 'Play');
+    playBtn.setAttribute('aria-label', playLabel.textContent);
+  }
+  playBtn.addEventListener('click', () => {
+    if (finished && !playing) { resetSim(); cam.auto = true; autoBtn.setAttribute('aria-pressed', 'true'); }
+    setPlaying(!playing);
+  });
+  document.getElementById('restart').addEventListener('click', () => { resetSim(); jumpTarget = null; setPlaying(true); });
+  autoBtn.addEventListener('click', () => { cam.auto = !cam.auto; autoBtn.setAttribute('aria-pressed', String(cam.auto)); });
+  for (const r of document.querySelectorAll('input[name="speed"]')) r.addEventListener('change', () => { speedMult = parseFloat(r.value); });
+  window.addEventListener('keydown', (e) => {
+    if (e.target && /INPUT|TEXTAREA|BUTTON|SUMMARY/.test(e.target.tagName)) return;
+    if (e.code === 'Space') { e.preventDefault(); playBtn.click(); }
+    if (e.key === 'r' || e.key === 'R') document.getElementById('restart').click();
+  });
+  setPlaying(playing);
+
+  function phaseFor(t, sep) {
+    if (tPeri === null) return ['Approach', `closing at ${Math.abs(P.vRad / S.KMS).toFixed(0)} km/s`];
+    const vRel = Math.hypot(sim.rel.v[0], sim.rel.v[1], sim.rel.v[2]) / S.KMS;
+    if (t < tPeri - 0.45) return ['Approach', `closing at ${vRel.toFixed(0)} km/s`];
+    if (t <= tPeri + 0.35) return ['First close pass', `${sep.toFixed(0)} kpc apart at ${vRel.toFixed(0)} km/s`];
+    if (tMerge !== null && t < tMerge - 0.5) return ['Tidal tails unfurl', 'cores swing back out, then fall'];
+    if (tMerge !== null && t < tMerge) return ['Second pass', 'dynamical friction takes hold'];
+    if (tMerge !== null && t < tMerge + 1.5) return ['Cores merge', 'Milkomeda is born'];
+    if (tMerge !== null) return ['Milkomeda settles', 'an elliptical remnant relaxes'];
+    return ['Extended encounter', 'no merger within this window'];
+  }
+
+  let lastUi = -1;
+  function updateUi() {
+    const t = sim.t, sep = sim.separation();
+    tval.textContent = `T + ${t.toFixed(2)} Gyr`;
+    sval.textContent = `${sep < 100 ? sep.toFixed(1) : sep.toFixed(0)} kpc`;
+    const mly = sep * S.KPC_LY / 1e6;
+    sly.textContent = mly >= 0.1 ? `${mly.toFixed(2)} million ly` : `${(mly * 1000).toFixed(0)} thousand ly`;
+    const [ph, alt] = phaseFor(t, sep);
+    phaseEl.textContent = ph; phaseAlt.textContent = alt;
+    const frac = Math.min(1, t / T_END);
+    fill.style.width = (100 * frac) + '%'; head.style.left = (100 * frac) + '%';
+    track.setAttribute('aria-valuenow', t.toFixed(2));
+    for (const ev of events) ev.el.classList.toggle('active', Math.abs(t - ev.t) < 0.25);
+  }
+
+  // ---------- main loop ----------
+  let last = performance.now(), acc = 0;
+  function frame(now) {
+    const real = Math.min(0.05, (now - last) / 1000); last = now;
+
+    if (jumpTarget !== null) {
+      let steps = 0;
+      while (sim.t < jumpTarget - 1e-9 && steps < 160) { sim.step(DT); pushTrail(); steps++; }
+      if (sim.t >= jumpTarget - 1e-9) { jumpTarget = null; toast.classList.remove('show'); if (sim.t >= T_END - 1e-6) { finished = true; setPlaying(false); } }
+    } else if (playing && !finished) {
+      const sep = sim.separation();
+      const boost = Math.max(1, Math.min(5, sep / 120));      // hurry through the empty approach
+      acc += real * BASE_RATE * speedMult * boost;
+      let steps = 0;
+      while (acc >= DT && steps < 40) { sim.step(DT); pushTrail(); acc -= DT; steps++; }
+      if (steps === 40) acc = 0;
+      if (sim.t >= T_END) { finished = true; setPlaying(false); }
+    }
+
+    // camera
+    if (cam.auto) cam.target = frameTarget();
+    const k = 1 - Math.exp(-real * 2.2);
+    cam.halfW += (cam.target - cam.halfW) * k;
+    const mid = [(sim.c1[0] + sim.c2[0]) / 2, (sim.c1[1] + sim.c2[1]) / 2, (sim.c1[2] + sim.c2[2]) / 2];
+    for (let i = 0; i < 3; i++) cam.center[i] += (mid[i] - cam.center[i]) * k;
+
+    // draw
+    resize();
+    const aspect = canvas.width / canvas.height;
+    const scale = 1 / cam.halfW;
+    const rot = rotMatrix();
+    gl.clear(gl.COLOR_BUFFER_BIT);
+
+    // background
+    gl.useProgram(progBg);
+    gl.bindBuffer(gl.ARRAY_BUFFER, bufBg);
+    const aP = A(progBg, 'a_p'), aB = A(progBg, 'a_b');
+    gl.enableVertexAttribArray(aP); gl.vertexAttribPointer(aP, 2, gl.FLOAT, false, 12, 0);
+    gl.enableVertexAttribArray(aB); gl.vertexAttribPointer(aB, 1, gl.FLOAT, false, 12, 8);
+    gl.uniform2f(U(progBg, 'u_shift'), cam.yaw * 0.08, cam.pitch * 0.08);
+    gl.uniform1f(U(progBg, 'u_dpr'), dpr);
+    gl.drawArrays(gl.POINTS, 0, NBG);
+
+    // trails
+    if (trailN > 1) {
+      gl.useProgram(progLn);
+      gl.uniformMatrix3fv(U(progLn, 'u_rot'), false, rot);
+      gl.uniform3fv(U(progLn, 'u_center'), cam.center);
+      gl.uniform1f(U(progLn, 'u_scale'), scale); gl.uniform1f(U(progLn, 'u_aspect'), aspect);
+      const aL = A(progLn, 'a_pos');
+      gl.enableVertexAttribArray(aL);
+      gl.bindBuffer(gl.ARRAY_BUFFER, bufTrail1); gl.bufferData(gl.ARRAY_BUFFER, trail1.subarray(0, 3 * trailN), gl.DYNAMIC_DRAW);
+      gl.vertexAttribPointer(aL, 3, gl.FLOAT, false, 0, 0);
+      gl.uniform3f(U(progLn, 'u_col'), 0.30, 0.24, 0.15); gl.drawArrays(gl.LINE_STRIP, 0, trailN);
+      gl.bindBuffer(gl.ARRAY_BUFFER, bufTrail2); gl.bufferData(gl.ARRAY_BUFFER, trail2.subarray(0, 3 * trailN), gl.DYNAMIC_DRAW);
+      gl.vertexAttribPointer(aL, 3, gl.FLOAT, false, 0, 0);
+      gl.uniform3f(U(progLn, 'u_col'), 0.16, 0.22, 0.34); gl.drawArrays(gl.LINE_STRIP, 0, trailN);
+    }
+
+    // particles
+    gl.useProgram(progPt);
+    gl.uniformMatrix3fv(U(progPt, 'u_rot'), false, rot);
+    gl.uniform3fv(U(progPt, 'u_center'), cam.center);
+    gl.uniform1f(U(progPt, 'u_scale'), scale); gl.uniform1f(U(progPt, 'u_aspect'), aspect);
+    const pxPerKpc = canvas.height * 0.5 / cam.halfW;
+    const ps = Math.max(1.0, Math.min(3.2, 1.15 * Math.pow(pxPerKpc * 4, 0.35))) * dpr;
+    const intensity = 0.62 * Math.max(0.10, Math.min(1, 70 / cam.halfW)) * Math.sqrt(40000 / N);
+    gl.uniform1f(U(progPt, 'u_ps'), ps); gl.uniform1f(U(progPt, 'u_int'), intensity); gl.uniform1f(U(progPt, 'u_soft'), 1.6);
+    const aPos = A(progPt, 'a_pos'), aCol = A(progPt, 'a_col'), aSize = A(progPt, 'a_size');
+    gl.enableVertexAttribArray(aPos); gl.enableVertexAttribArray(aCol); gl.enableVertexAttribArray(aSize);
+    gl.bindBuffer(gl.ARRAY_BUFFER, bufPos); gl.bufferData(gl.ARRAY_BUFFER, sim.pos, gl.DYNAMIC_DRAW); gl.vertexAttribPointer(aPos, 3, gl.FLOAT, false, 0, 0);
+    gl.bindBuffer(gl.ARRAY_BUFFER, bufCol); gl.vertexAttribPointer(aCol, 3, gl.FLOAT, false, 0, 0);
+    gl.bindBuffer(gl.ARRAY_BUFFER, bufSize); gl.vertexAttribPointer(aSize, 1, gl.FLOAT, false, 0, 0);
+    gl.drawArrays(gl.POINTS, 0, sim.N);
+
+    // nucleus glows: large soft discs, stronger when zoomed out so distant galaxies still read
+    glowPos.set(sim.c1, 0); glowPos.set(sim.c2, 3);
+    const glowPx = Math.max(26, Math.min(120, 8 * pxPerKpc + 26)) * dpr;
+    const glowInt = Math.max(0.10, Math.min(0.45, 0.10 + 0.6 * (1 - Math.min(1, 60 / cam.halfW))));
+    gl.uniform1f(U(progPt, 'u_ps'), glowPx); gl.uniform1f(U(progPt, 'u_int'), glowInt); gl.uniform1f(U(progPt, 'u_soft'), 3.5);
+    gl.bindBuffer(gl.ARRAY_BUFFER, bufGlowPos); gl.bufferData(gl.ARRAY_BUFFER, glowPos, gl.DYNAMIC_DRAW); gl.vertexAttribPointer(aPos, 3, gl.FLOAT, false, 0, 0);
+    gl.bindBuffer(gl.ARRAY_BUFFER, bufGlowCol); gl.vertexAttribPointer(aCol, 3, gl.FLOAT, false, 0, 0);
+    gl.bindBuffer(gl.ARRAY_BUFFER, bufGlowSize); gl.vertexAttribPointer(aSize, 1, gl.FLOAT, false, 0, 0);
+    gl.drawArrays(gl.POINTS, 0, 2);
+
+    if (now - lastUi > 80) { updateUi(); lastUi = now; }
+    requestAnimationFrame(frame);
+  }
+  pushTrail();
+  const m = /[#&?]t=([\d.]+)/.exec(location.hash);
+  if (m) jumpTo(Math.max(0, Math.min(T_END, parseFloat(m[1]))));
+  updateUi();
+  requestAnimationFrame(frame);
+})();
+</script>
