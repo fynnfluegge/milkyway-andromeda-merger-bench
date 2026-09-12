@@ -15,7 +15,7 @@ generation prompt, automated cross-project benchmark runner, or scoring rubric.
 | --- | --- | --- | --- |
 | [Vanilla Claude Fable 5.1](vanilla-claude-fable-5-1/README.md) | Restricted N-body simulation; WebGL; 40,000–60,000 test stars; 0–9 Gyr timeline | Static HTTP server | $4.48 |
 | [Vanilla Claude Opus 5](vanilla-claude-opus-5/README.md) | Restricted N-body encounter with a rigid-disc approach phase; WebGL 2; 56,000–110,000 test stars; 0–8 Gyr timeline | Static HTTP server | $6.93 |
-| [Vanilla GPT-6 Astra](vanilla-gpt-6-astra/README.md) | Artistic galaxy animation with scripted paths; React, TypeScript, WebGL, and Vinext; 0–8 Gyr timeline | Local Node.js server and npm | $5.04 initial estimate; approximately $6.31 including the later usage lookup |
+| [Vanilla GPT-6 Astra](vanilla-gpt-6-astra/README.md) | Artistic galaxy animation with scripted paths; React, TypeScript, WebGL, and Vinext; 0–8 Gyr timeline | Local Node.js server and npm | $5.04 estimated |
 
 Gyr means billion years. The two restricted N-body models move massless test
 stars through analytic galaxy potentials. The Astra implementation uses
@@ -80,12 +80,9 @@ Each benchmark README reproduces its model breakdown and available duration and
 code-change statistics. These are the costs of generating the projects; running
 their browser simulations does not call a model API.
 
-The records have different scopes. Astra's later total includes the usage lookup
-and supersedes its earlier total.
-
 Amounts are preserved from the recorded reports, not repriced against current
-model rates or verified as actual charges. Astra explicitly reports
-API-equivalent estimates. In the Claude tables, `k` means 1,000 tokens and `m`
+model rates or verified as actual charges. Astra's cost is an API-equivalent
+estimate. In the Claude tables, `k` means 1,000 tokens and `m`
 means 1,000,000; rounded token counts and costs should not be treated as exact
 invoices or directly comparable measurements of identical work.
 

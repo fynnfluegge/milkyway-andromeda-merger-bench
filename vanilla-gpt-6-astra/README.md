@@ -92,7 +92,7 @@ evaluation at the selected time allows seeking without replaying physics steps.
 
 Source: recorded usage for the `vanilla gpt-6-astra` run.
 
-The first recorded usage breakdown is:
+Estimated API-equivalent generation cost: **$5.04 USD**.
 
 | Token category | Tokens |
 | --- | ---: |
@@ -101,17 +101,8 @@ The first recorded usage breakdown is:
 | Output | 44,082 |
 | **Total, calculated from the three categories** | **1,914,970** |
 
-The source contains two accounting snapshots:
-
-| Scope | Total tokens | Estimated API-equivalent cost (USD) |
-| --- | ---: | ---: |
-| Initial recorded breakdown above | 1,914,970 | $5.04 |
-| Latest recorded total, including the usage lookup | 2,758,108 | Approximately $6.31 |
-
-The later total includes the earlier usage; **do not add the two rows**. The
-source describes the first estimate as using standard GPT-6 Astra rates, but
-does not list the rates themselves. It supplies no category breakdown for the
-later total, cache-write count, API/wall duration, or code-change statistics.
-These are recorded API-equivalent estimates, not verified charges or a fresh
-pricing calculation. Local visualization playback uses no model API and adds
-no model-token cost.
+The source describes the estimate as using standard GPT-6 Astra rates, but does
+not list the rates themselves. It supplies no cache-write count, API/wall
+duration, or code-change statistics. This is a recorded API-equivalent estimate,
+not a verified charge or a fresh pricing calculation. Local visualization
+playback uses no model API and adds no model-token cost.
